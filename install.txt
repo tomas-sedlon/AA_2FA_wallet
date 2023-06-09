@@ -1,0 +1,5 @@
+python3.8 -m pip install merkly
+python3.8 -m pip install fastapi
+python3.8 -m pip install uvicorn
+python3.8 -m pip install pyotp
+python3.8 -m pip install qrcode

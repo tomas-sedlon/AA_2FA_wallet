@@ -1,0 +1,18 @@
+register_user:
+curl -X POST "http://localhost:8000/users" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"name\":\"testwallet\"}"
+
+verify_otp:
+curl -X GET "http://localhost:8000/verify_otp/testwallet/009528"
+
+generate_otp_for_timestamp:
+curl -X POST "http://localhost:8000/generate_otp_for_timestamp" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"user\":\"testwallet\", \"timestamp\":\"1686588047\"}"
+
+next_leaf_for_user/:
+curl -X GET "http://localhost:8000/next_leaf_for_user/testwallet"  
+
+
+TEST FLOW:
+curl -X POST "http://localhost:8000/users" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"name\":\"testwallet\"}"
+curl -X POST "http://localhost:8000/generate_otp_for_timestamp" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"user\":\"testwallet\", \"timestamp\":\"1686588077\"}"
+curl -X POST "http://localhost:8000/generate_otp_for_timestamp" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"user\":\"testwallet\", \"timestamp\":\"1686588007\"}"
+curl -X GET "http://localhost:8000/next_leaf_for_user/testwallet"  
