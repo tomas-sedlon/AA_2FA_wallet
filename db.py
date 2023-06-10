@@ -73,22 +73,6 @@ def generate_totp_batch(username):
     print(f"mtree.root: {mtree.root}")
     return mtree.root
 
-    # return mtree.root
-
-# def get_timestamps_for_next_hours(hours, step):
-#     now = datetime.now()
-#     # Calculate end time (24 hours later)
-#     end_time = now + timedelta(hours=hours)
-#     # Create an empty list to store timestamps
-#     timestamps = []
-#     # Start from now, and end at the end time
-#     while now <= end_time:
-#         # Convert datetime object to UNIX timestamp and append to the list
-#         timestamps.append(int(now.timestamp()))
-#         # Increment current time by 30 seconds
-#         now += timedelta(seconds=step)
-#     print(f"len of timestamps: {len(timestamps)}")
-#     return timestamps
 
 def get_timestamps(number_of_timestamps, step):
     now = datetime.now()
@@ -108,14 +92,9 @@ def get_next_leaf_and_proof_for_user(username):
     user_mtree = user_to_merkle_tree[username]
     leaf = get_leaf_for_next_timestamp(username)
     proof = user_mtree.proof(leaf)
-    proof_cast_str = str(proof)
-    print(f"leaf: {leaf}")
-    print(f"proof: {proof}")
-    print(f"proof type: {type(proof)}")
-    print(f"proof type inside list: {type(proof[0])}")
-
-    print(f"proof_cast_str: {proof_cast_str}")
-    return NextLeafForUserResponse(proof = proof_cast_str, leaf = leaf)
+    proof_nodes_str = [get_node_str(node) for node in proof]
+    print(f"proof_nodes_str: {proof_nodes_str}")
+    return NextLeafForUserResponse(proof = proof_nodes_str, leaf = leaf)
 
 def get_leaf_for_next_timestamp(username):
     user_timestamps = [item.timestamp for item in user_to_timestamp_to_otp[username]]
@@ -137,3 +116,11 @@ def get_otp_for_timestamp(timestamp_to_otp_list: List[TimestampToOtp], input_tim
         if item.timestamp == input_timestamp:
             return item.otp
     return None
+
+def get_node_str(node: Node):
+    if node.left is None:
+        return f"{node.right}"
+    elif node.right is None:
+        return f"{node.left}"
+    else:
+        return ""

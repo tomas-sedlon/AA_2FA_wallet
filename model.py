@@ -23,10 +23,7 @@ class GenerateOtp24Hours(BaseModel):
 
 class NextLeafForUserResponse(BaseModel):
     leaf: str
-    # proof: List[Node]
-    # proof type: <class 'list'>
-    # proof type inside list: <class 'merkly.mtree.Node'>
-    proof: str
+    proof: List[str]
 
 class TimestampToOtp(BaseModel):
     timestamp: int
