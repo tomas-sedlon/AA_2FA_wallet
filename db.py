@@ -73,7 +73,7 @@ def generate_totp_batch(username):
         user_to_timestamp_to_otp[username].append(TimestampToOtp(timestamp=timestamp, otp=totp_code))
         user_to_timestamp_to_bytes_hex[username].append(
             TimestampToBytesHex(timestamp=timestamp, 
-                                bytes_hex=convert_timestamp_and_code_to_256_bytes(int(timestamp), int(totp_code)).hex()
+                                bytes_hex=f"0x{convert_timestamp_and_code_to_256_bytes(int(timestamp), int(totp_code)).hex()}"
                                 )
             )
     bytes_hex_for_merkle = [item.bytes_hex for item in user_to_timestamp_to_bytes_hex[username]]
