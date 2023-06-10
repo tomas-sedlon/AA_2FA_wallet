@@ -2,7 +2,7 @@ from typing import List, Optional
 import pyotp
 from totp import totp
 from merkly.mtree import MerkleTree
-from datetime import datetime
+from datetime import datetime, timedelta
 from model import *
 
 
@@ -54,6 +54,56 @@ def generate_totp_for_timestamp(username, timestamp):
     print(f"user_to_merkle_tree: {user_to_merkle_tree}")
     return totp_code
 
+# generates for a bit over 34 hours
+def generate_totp_batch(username):
+    secret = user_to_secret.get(username)
+    timestamps = get_timestamps(4096, 30)
+    # we need to have an even number of timestamps for merkle leafs
+    if len(timestamps) % 2 != 0:
+        timestamps.append(timestamps[-1])
+    for timestamp in timestamps:
+        totp_code = totp(key=secret, unix_timestamp=timestamp)
+        user_to_timestamp_to_otp[username].append((TimestampToOtp(timestamp=timestamp, otp=totp_code)))
+    user_merkle_leafs = [item.otp for item in user_to_timestamp_to_otp[username]]
+    print(f"user_merkle_leafs: {user_merkle_leafs}")
+    # create a Merkle Tree
+    mtree = MerkleTree(user_merkle_leafs)
+    user_to_merkle_tree[username] = mtree
+    print(f"user_to_merkle_tree: {user_to_merkle_tree}")
+    print(f"mtree.root: {mtree.root}")
+    return mtree.root
+
+    # return mtree.root
+
+# def get_timestamps_for_next_hours(hours, step):
+#     now = datetime.now()
+#     # Calculate end time (24 hours later)
+#     end_time = now + timedelta(hours=hours)
+#     # Create an empty list to store timestamps
+#     timestamps = []
+#     # Start from now, and end at the end time
+#     while now <= end_time:
+#         # Convert datetime object to UNIX timestamp and append to the list
+#         timestamps.append(int(now.timestamp()))
+#         # Increment current time by 30 seconds
+#         now += timedelta(seconds=step)
+#     print(f"len of timestamps: {len(timestamps)}")
+#     return timestamps
+
+def get_timestamps(number_of_timestamps, step):
+    now = datetime.now()
+    timestamps = []
+
+    for _ in range(number_of_timestamps):
+        # Convert datetime object to UNIX timestamp and append to the list
+        timestamps.append(int(now.timestamp()))
+        # Increment current time by step seconds
+        now += timedelta(seconds=step)
+    
+    print(f"len of timestamps: {len(timestamps)}")
+    return timestamps
+
+
 def get_next_leaf_and_proof_for_user(username):
     user_mtree = user_to_merkle_tree[username]
     leaf = get_leaf_for_next_timestamp(username)
@@ -61,6 +111,9 @@ def get_next_leaf_and_proof_for_user(username):
     proof_cast_str = str(proof)
     print(f"leaf: {leaf}")
     print(f"proof: {proof}")
+    print(f"proof type: {type(proof)}")
+    print(f"proof type inside list: {type(proof[0])}")
+
     print(f"proof_cast_str: {proof_cast_str}")
     return NextLeafForUserResponse(proof = proof_cast_str, leaf = leaf)
 

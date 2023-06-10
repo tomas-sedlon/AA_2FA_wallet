@@ -10,8 +10,17 @@ curl -X POST "http://localhost:8000/generate_otp_for_timestamp" -H  "accept: app
 next_leaf_for_user/:
 curl -X GET "http://localhost:8000/next_leaf_for_user/testwallet"  
 
+generate_otp_batch:
+curl -X POST "http://localhost:8000/generate_otp_batch" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"user\":\"testwallet\"}"
 
-TEST FLOW:
+
+
+TEST FLOW otps for next day:
+curl -X POST "http://localhost:8000/users" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"name\":\"testwallet\"}"
+curl -X POST "http://localhost:8000/generate_otp_batch" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"user\":\"testwallet\"}"
+curl -X GET "http://localhost:8000/next_leaf_for_user/testwallet"  
+
+TEST FLOW only 2 otps:
 curl -X POST "http://localhost:8000/users" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"name\":\"testwallet\"}"
 curl -X POST "http://localhost:8000/generate_otp_for_timestamp" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"user\":\"testwallet\", \"timestamp\":\"1686588077\"}"
 curl -X POST "http://localhost:8000/generate_otp_for_timestamp" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"user\":\"testwallet\", \"timestamp\":\"1686588007\"}"
