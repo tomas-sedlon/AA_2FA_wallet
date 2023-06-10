@@ -4,11 +4,13 @@ from totp import totp
 from merkly.mtree import MerkleTree
 from datetime import datetime, timedelta
 from model import *
+import struct
 
 
 user_to_secret = {}
 # user to list of TimestampToOtp
 user_to_timestamp_to_otp = {}
+user_to_timestamp_to_bytes_hex = {}
 user_to_merkle_tree = {}
 
 
@@ -24,6 +26,8 @@ def register_user(username: str, issuer_name: str = 'CoolWallet') -> str:
     # Store the secret for this user
     user_to_secret[username] = totp.secret
     user_to_timestamp_to_otp[username] = []
+    user_to_timestamp_to_bytes_hex[username] = []
+
 
     # Generate a provisioning URI that can be used to configure the Google Authenticator app
     return totp.provisioning_uri(name=username, issuer_name=issuer_name)
@@ -64,15 +68,29 @@ def generate_totp_batch(username):
         timestamps.append(timestamps[-1])
     for timestamp in timestamps:
         totp_code = totp(key=secret, unix_timestamp=timestamp)
-        user_to_timestamp_to_otp[username].append((TimestampToOtp(timestamp=timestamp, otp=totp_code)))
-    user_merkle_leafs = [item.otp for item in user_to_timestamp_to_otp[username]]
-    print(f"user_merkle_leafs: {user_merkle_leafs}")
+        user_to_timestamp_to_otp[username].append(TimestampToOtp(timestamp=timestamp, otp=totp_code))
+        user_to_timestamp_to_bytes_hex[username].append(
+            TimestampToBytesHex(timestamp=timestamp, 
+                                bytes_hex=convert_timestamp_and_code_to_64_bytes(int(timestamp), int(totp_code)).hex()
+                                )
+            )
+    bytes_hex_for_merkle = [item.bytes_hex for item in user_to_timestamp_to_bytes_hex[username]]
+    # print(f"bytes_hex_for_merkle: {bytes_hex_for_merkle}")
     # create a Merkle Tree
-    mtree = MerkleTree(user_merkle_leafs)
+    mtree = MerkleTree(bytes_hex_for_merkle)
     user_to_merkle_tree[username] = mtree
     print(f"user_to_merkle_tree: {user_to_merkle_tree}")
     print(f"mtree.root: {mtree.root}")
     return mtree.root
+
+def convert_timestamp_and_code_to_64_bytes(timestamp, code):
+    timestamp_bytes = struct.pack('>Q', timestamp)
+    # Convert code to bytes
+    code_bytes = struct.pack('>Q', code)
+    # Concatenate the bytes
+    concatenated_bytes = timestamp_bytes + code_bytes
+    # print(f"print(concatenated_bytes): {concatenated_bytes}")
+    return concatenated_bytes
 
 
 def get_timestamps(number_of_timestamps, step):
@@ -100,7 +118,7 @@ def get_next_leaf_and_proof_for_user(username):
 def get_leaf_for_next_timestamp(username):
     user_timestamps = [item.timestamp for item in user_to_timestamp_to_otp[username]]
     closest_future_timestamp = get_closest_future_timestamp(user_timestamps)
-    return get_otp_for_timestamp(user_to_timestamp_to_otp[username], closest_future_timestamp)
+    return get_hex_for_timestamp(user_to_timestamp_to_bytes_hex[username], closest_future_timestamp)
 
 def get_closest_future_timestamp(timestamps):
     now = datetime.now()
@@ -112,10 +130,16 @@ def get_closest_future_timestamp(timestamps):
     closest_future_timestamp = min(future_timestamps, key=lambda ts: datetime.fromtimestamp(ts) - now)
     return closest_future_timestamp
 
-def get_otp_for_timestamp(timestamp_to_otp_list: List[TimestampToOtp], input_timestamp: int) -> Optional[str]:
-    for item in timestamp_to_otp_list:
+# def get_otp_for_timestamp(timestamp_to_otp_list: List[TimestampToOtp], input_timestamp: int) -> Optional[str]:
+#     for item in timestamp_to_otp_list:
+#         if item.timestamp == input_timestamp:
+#             return item.otp
+#     return None
+
+def get_hex_for_timestamp(timestamp_to_hex_list: List[TimestampToBytesHex], input_timestamp: int) -> Optional[str]:
+    for item in timestamp_to_hex_list:
         if item.timestamp == input_timestamp:
-            return item.otp
+            return item.bytes_hex
     return None
 
 def get_node_str(node: Node):

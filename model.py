@@ -29,5 +29,9 @@ class TimestampToOtp(BaseModel):
     timestamp: int
     otp: str
 
+class TimestampToBytesHex(BaseModel):
+    timestamp: int
+    bytes_hex: str
+
 class MTreeRoot(BaseModel):
     root: str
