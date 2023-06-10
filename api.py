@@ -1,9 +1,19 @@
 from fastapi import FastAPI
 from db import register_user, verify_otp, print_user_to_secret, generate_totp_for_timestamp, get_next_leaf_and_proof_for_user, generate_totp_batch
 from model import *
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.post("/users", response_model=UserUrl)
 async def post_user(user: User):

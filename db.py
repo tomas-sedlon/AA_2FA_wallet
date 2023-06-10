@@ -17,6 +17,7 @@ def print_user_to_secret():
 
 
 def register_user(username: str, issuer_name: str = 'CoolWallet') -> str:
+    print(f"registering user: {username}")
     # Create a new TOTP object
     totp = pyotp.TOTP(pyotp.random_base32())
 
