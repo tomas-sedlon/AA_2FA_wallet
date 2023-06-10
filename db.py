@@ -59,6 +59,8 @@ def generate_totp_for_timestamp(username, timestamp):
     print(f"user_to_merkle_tree: {user_to_merkle_tree}")
     return totp_code
 
+# 16 bytes and 16 bytes - as hexa is 64 chars from 32 bytes total
+
 # generates for a bit over 34 hours
 def generate_totp_batch(username):
     secret = user_to_secret.get(username)
@@ -71,7 +73,7 @@ def generate_totp_batch(username):
         user_to_timestamp_to_otp[username].append(TimestampToOtp(timestamp=timestamp, otp=totp_code))
         user_to_timestamp_to_bytes_hex[username].append(
             TimestampToBytesHex(timestamp=timestamp, 
-                                bytes_hex=convert_timestamp_and_code_to_64_bytes(int(timestamp), int(totp_code)).hex()
+                                bytes_hex=convert_timestamp_and_code_to_256_bytes(int(timestamp), int(totp_code)).hex()
                                 )
             )
     bytes_hex_for_merkle = [item.bytes_hex for item in user_to_timestamp_to_bytes_hex[username]]
@@ -83,13 +85,16 @@ def generate_totp_batch(username):
     print(f"mtree.root: {mtree.root}")
     return mtree.root
 
-def convert_timestamp_and_code_to_64_bytes(timestamp, code):
-    timestamp_bytes = struct.pack('>Q', timestamp)
-    # Convert code to bytes
-    code_bytes = struct.pack('>Q', code)
+def convert_timestamp_and_code_to_256_bytes(timestamp, code):
+    # timestamp_bytes = struct.pack('>Q', timestamp)[:16]
+    # # Convert code to bytes
+    # code_bytes = struct.pack('>Q', code)[:16]
+    timestamp_bytes = (timestamp).to_bytes(16, 'big')
+    code_bytes = (code).to_bytes(16, 'big')
+
     # Concatenate the bytes
     concatenated_bytes = timestamp_bytes + code_bytes
-    # print(f"print(concatenated_bytes): {concatenated_bytes}")
+    print(f"print(concatenated_bytes hexa): {concatenated_bytes.hex()}")
     return concatenated_bytes
 
 
